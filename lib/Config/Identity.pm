@@ -3,6 +3,8 @@ package Config::Identity;
 
 =head1 SYNOPSIS
 
+Note: we also look for the identity files with a '.gpg' suffix.
+
 PAUSE:
 
     use Config::Identity::PAUSE;
@@ -37,11 +39,21 @@ For PAUSE access, an identity is a C<user>/C<password> pair
 
 =head2 %identity = Config::Identity->load_best( <stub> )
 
-First attempt to load an identity from $HOME/.<stub>-identity
+We attempt to load identities from files (in this order:)
 
-If that file does not exist, then attempt to load an identity from $HOME/.<stub>
+=over 4
 
-The file may be optionally GnuPG encrypted
+=item C<$HOME/.<stub>-identity.gpg>
+
+=item C<$HOME/.<stub>-identity>
+
+=item C<$HOME/.<stub>.gpg>
+
+=item C<$HOME/.<stub>>
+
+=back
+
+The file may be optionally GnuPG encrypted, regardless of '.gpg' suffix.
 
 %identity will be populated like so:
 
@@ -155,8 +167,8 @@ sub best {
     croak "Missing stub" unless defined $stub && length $stub;
 
     for my $i0 ( ".$stub-identity", ".$stub" ) {
-        for my $i1 ( "." ) {
-            my $path = File::Spec->catfile( $base, $i1, $i0 );
+        for my $i1 ( ".gpg", q{} ) {
+            my $path = File::Spec->catfile( $base, '.', "$i0$i1" );
             return $path if -f $path;
         }
     }
